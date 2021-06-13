@@ -8,13 +8,15 @@ class OAuth {
 
     public Client $guzzleClient;
 
-    private string $url_auth;
-    private string $url_token;
     private string $client_id;
     private string $client_secret;
-    private $scope;
     private string $redirect_uri;
     private string $response_type;
+    private $scope;
+
+    private string $authorizationEndpoint;
+    private string $accessTokenEndpoint;
+    private string $userInfoEndpoint;
 
     private string $code;
     private string $grant_type;
@@ -23,52 +25,69 @@ class OAuth {
 
     public function __construct($params) {
 
-        $this->guzzleClient = new Client();
+        $this->guzzleClient = new Client([
+            'timeout' => 3,
+            'verify'  => realpath(dirname(__FILE__) . '/..') . '/cacert.pem'
+        ]);
 
-        $this->client_id     = $params['clientId'];
-        $this->client_secret = $params['clientSecret'];
-        $this->redirect_uri  = $params['redirectUri'];
-        $this->state         = md5(microtime(rand()));
+        $this->client_id             = $params['clientId'];
+        $this->client_secret         = $params['clientSecret'];
+        $this->redirect_uri          = $params['redirectUri'];
 
-        $this->url_auth      = $params['urlAuthorize'];
-        $this->url_token     = $params['urlAccessToken'];
-        $this->url_resource  = $params['urlResource'];
+        $this->authorizationEndpoint = $params['authorizationEndpoint'];
+        $this->accessTokenEndpoint   = $params['accessTokenEndpoint'];
+        $this->userInfoEndpoint      = $params['userInfoEndpoint'];
 
-        $this->scope         = isset($params['scope']) ? $params['scope'] : ['email'];
-        $this->response_type = 'code';
-        $this->grant_type    = 'authorization_code';
+        $this->scope                 = isset($params['scope']) ? $params['scope'] : ['email'];
+        $this->response_type         = 'code';
+        $this->grant_type            = 'authorization_code';
     }
 
-    public function getLoginUrl() {
-        $this->scope = implode(',', $this->scope);
-        return $this->url_auth . '?response_type=' . $this->response_type . '&scope=' . $this->scope . '&client_id=' . $this->client_id . '&redirect_uri=' . $this->redirect_uri . '&state=' . $this->state;
+    public function getAuthUrl() {
+
+        return $this->authorizationEndpoint . '?response_type=' . $this->response_type . '&scope=' . $this->getScope() . '&client_id=' . $this->client_id . '&redirect_uri=' . $this->redirect_uri;
     }
 
     public function getToken($code) {
         try {
             $this->code = $code;
-            $accessTokenUri = $this->url_token . '?client_id=' . $this->client_id . '&client_secret=' . $this->client_secret . '&code=' . $this->code . '&grant_type=' . $this->grant_type . '&redirect_uri=' . $this->redirect_uri;
-            $guzzleRequest = $this->guzzleClient->request('POST', $accessTokenUri);
-            $this->token = $guzzleRequest->getBody()->getContents();
+            $response = $this->guzzleClient->request('POST', $this->accessTokenEndpoint, [
+                'form_params' => [
+                    'code'          => $this->code,
+                    'client_id'     => $this->client_id,
+                    'client_secret' => $this->client_secret,
+                    'redirect_uri'  => $this->redirect_uri,
+                    'grant_type'    => $this->grant_type
+                ]
+            ]);
+            $this->token = $response->getBody()->getContents();
         } catch (\Exception $exception) {
             die($exception->getMessage());
         }
         return $this->token;
     }
 
-    private function getAccessToken() {
-        $token = json_decode($this->token, true);
-        return $token['access_token'];
-    }
-
     public function getResource() {
         try {
-            $guzzleRequest = $this->guzzleClient->request('GET', $this->url_resource . '?access_token=' . $this->getAccessToken(), ['headers' => [ 'authorization: Bearer ' . $this->getAccessToken() ]]);
-            $this->resource = $guzzleRequest->getBody()->getContents();
+            $response = $this->guzzleClient->request('GET', $this->userInfoEndpoint, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->getAccessToken()
+                ]
+            ]);
+            $this->resource = $response->getBody()->getContents();
         } catch (\Exception $exception) {
             die($exception->getMessage());
         }
         return $this->resource;
+    }
+
+    private function getScope() {
+        $this->scope = implode('%20', $this->scope);
+        return $this->scope;
+    }
+    private function getAccessToken() {
+        $token = json_decode($this->token);
+        return $token->access_token;
     }
 
 }
