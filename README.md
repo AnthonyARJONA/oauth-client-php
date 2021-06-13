@@ -5,6 +5,18 @@
 - [GuzzleHTTP](https://github.com/guzzle/guzzle)
 - [PHP](https://www.php.net/) >= 7.3
 
+## Installation
+
+Download and install Composer by following the [official instructions](https://getcomposer.org/download/).
+
+For usage, [see the documentation](https://getcomposer.org/doc/).
+
+Run this command to install the package with composer
+
+```bash
+composer require mimso/oauth-client-php
+```
+
 ## Usage
 
 Example for google oauth API.
