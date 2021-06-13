@@ -21,9 +21,9 @@ $oauth = new \Mnt\OAuth\OAuth([
 ]);
 
 if(isset($_GET['code'])) {
-		$accessToken = $oauth->getToken($_GET['code']);
+    $accessToken = $oauth->getToken($_GET['code']);
     $user = $oauth->getResource();
-		var_dump($user) //logged
+    var_dump($user) //logged
 } else {
     echo "<a href=". $oauth->getAuthUrl() .">login with google</a>";
 }
