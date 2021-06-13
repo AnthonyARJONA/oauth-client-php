@@ -1,0 +1,22 @@
+{
+    "name": "mimso/oauth-client-php",
+    "description": "Authentification with social network",
+    "require": {
+        "php": "^7.3 || ^8.0",
+        "guzzlehttp/guzzle": "^7.3"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Mnt\\OAuth\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Anthony ARJONA",
+            "email": "contact@mimso.net",
+            "homepage": "https://r.mimso.net/3f422065",
+            "role": "Developer"
+        }
+    ]
+}
