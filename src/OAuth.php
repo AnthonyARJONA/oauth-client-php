@@ -39,13 +39,14 @@ class OAuth {
         $this->userInfoEndpoint      = $params['userInfoEndpoint'];
 
         $this->scope                 = isset($params['scope']) ? $params['scope'] : ['email'];
+        $this->state                 = isset($params['state']) ? $params['state'] : '00001010';
         $this->response_type         = 'code';
         $this->grant_type            = 'authorization_code';
     }
 
     public function getAuthUrl() {
 
-        return $this->authorizationEndpoint . '?response_type=' . $this->response_type . '&scope=' . $this->getScope() . '&client_id=' . $this->client_id . '&redirect_uri=' . $this->redirect_uri;
+        return $this->authorizationEndpoint . '?response_type=' . $this->response_type . '&scope=' . $this->getScope() . '&client_id=' . $this->client_id . '&redirect_uri=' . $this->redirect_uri . '&state=' . $this->state;
     }
 
     public function getToken($code) {
